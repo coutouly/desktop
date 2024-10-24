@@ -69,6 +69,8 @@ interface MessageListStore {
 	sortType: SortType;
 }
 
+
+
 const messageListStore = create<MessageListStore>((set) => ({
 	setFilter: (filter) => set({ filter }),
 	filter: "",
@@ -298,7 +300,7 @@ const UnMemoizedMessageList: FC = () => {
 			const result = await mailClient
 				.messageList(pageParam, selectedBox.id)
 				.catch((error) => createBaseError(createErrorFromUnknown(error)));
-
+			
 			if (result.ok) return result.data;
 			else throw result.error;
 		},
@@ -313,10 +315,46 @@ const UnMemoizedMessageList: FC = () => {
 			enabled:
 				selectedBox?.id != undefined &&
 				selectedBox.selectable &&
-				user?.token != undefined
+				user?.token != undefined, 
+			refetchInterval: 60000
 		}
 	);
+	const previousDataRef = useRef(data);
+	
+	const playNotificationSound = () => {
+		const audio = new Audio("/mail.oga");
+		audio.play();
+	};
+	useEffect(() => {
+		if (previousDataRef.current && data) {
+		  const previousMails = previousDataRef.current.pages.flat();
+		  const currentMails = data.pages.flat();
+			console.log("Previous Mails Count:", previousMails.length);
+			console.log("Current Mails Count:", currentMails.length)
+		  // Si la longueur des mails a augmenté, jouer le son
+		  // Comparer les mails pour détecter de nouveaux messages
+        const newMails = currentMails.filter(
+            (currentMail) => !previousMails.some(
+                (previousMail) => previousMail.id === currentMail.id // Comparer par ID ou autre attribut unique
+            )
+        );
 
+        // Si des nouveaux mails sont détectés, jouer le son
+        if (newMails.length > 0) {
+            console.log("New mail detected, playing sound.");
+            playNotificationSound();
+        }
+		  
+		  
+		  
+		  
+		}
+
+		// Mettre à jour la référence avec les données actuelles
+		previousDataRef.current = data;
+	  }, [data]);
+	
+	
 	useEffect(
 		() => setFetching(isFetching || isFetchingNextPage),
 		[isFetching, isFetchingNextPage]
