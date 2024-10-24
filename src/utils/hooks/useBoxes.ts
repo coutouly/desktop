@@ -25,7 +25,7 @@ const useBoxes = (): UseBoxes => {
 		data: boxes,
 		error,
 		isLoading: fetching
-	} = useQuery<MailBoxList, AppError>(["boxes", user?.id], async () => {
+	} = useQuery<MailBoxList, AppError>(["boxes", user?.displayName], async () => {
 		const result = await mailClient.list().catch(createResultFromUnknown);
 
 		if (result.ok) {
