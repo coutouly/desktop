@@ -5,9 +5,10 @@ use std::{
     result,
 };
 
-use dust_mail::types::Error as SdkError;
+use dust_mail::error::Error as SdkError;
 use keyring::Error as KeyringError;
 use serde_json::Error as JsonError;
+use dust_mail::discover::Error as ConfigError;
 
 use serde::{ser::SerializeStruct, Serialize};
 
@@ -65,7 +66,14 @@ impl From<IoError> for Error {
         Error::new(ErrorKind::Io(io_error), "IO error")
     }
 }
-
+impl From<ConfigError> for Error {
+    fn from(config_error: ConfigError) -> Self {
+        Error::new(
+            ErrorKind::Config(config_error),
+            "Error with config mail server",
+        )
+    }
+}
 impl Serialize for Error {
     fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
     where
@@ -103,6 +111,7 @@ pub enum ErrorKind {
     Io(IoError),
     Keyring(KeyringError),
     Json(JsonError),
+    Config(ConfigError)
 }
 
 impl fmt::Display for Error {

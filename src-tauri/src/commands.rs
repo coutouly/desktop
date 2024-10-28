@@ -1,5 +1,8 @@
 use dust_mail::{
-    detect::{Config, DetectClient},
+    //detect::{Config, DetectClient},
+    discover::config::Config,
+    discover::from_email,
+
     types::{MailBox, Message, Preview},
 };
 
@@ -8,14 +11,22 @@ use crate::{
     keyring,
     parse::to_json,
     sessions::Sessions,
-    types::{LoginConfig, Result},
+    types::{LoginConfig, Result, Error},
 };
 
 use tauri::State;
 
 #[tauri::command(async)]
-pub async fn detect_config(email_address: String) -> Result<Config> {
-    Ok(DetectClient::from_email(&email_address).await?)
+pub async fn detect_config(email_address: String, password: Option<String>) -> Result<Config> {
+    //Ok(from_email(&email_address, password).await)
+
+    match from_email(&email_address, password.as_deref()).await {
+    Ok(config) => Ok(config), // Return the Config wrapped in Ok
+    Err(err) => {
+        // Handle the dust_mail::discover::Error directly
+        Err(Error::from(err)) // Convert it to your error type here
+    }
+   }
 }
 
 #[tauri::command(async)]
